@@ -1,0 +1,42 @@
+"use client";
+
+import { useState } from "react";
+import NdaForm from "./NdaForm";
+import NdaPreview from "./NdaPreview";
+import { NdaFormData, defaultFormData, generateFullNda } from "@/lib/generateNda";
+
+export default function NdaCreator() {
+  const [formData, setFormData] = useState<NdaFormData>(defaultFormData);
+  const markdown = generateFullNda(formData);
+
+  function handleDownload() {
+    const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "Mutual-NDA.md";
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 100);
+  }
+
+  return (
+    <div className="flex flex-col lg:flex-row gap-8 flex-1">
+      <div className="lg:w-1/2 shrink-0">
+        <div className="sticky top-8 space-y-4">
+          <NdaForm formData={formData} onChange={setFormData} />
+          <button
+            onClick={handleDownload}
+            className="w-full rounded bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 transition-colors"
+          >
+            Download Markdown
+          </button>
+        </div>
+      </div>
+      <div className="lg:w-1/2 min-w-0">
+        <div className="rounded border border-zinc-200 bg-white p-6 shadow-sm">
+          <NdaPreview markdown={markdown} />
+        </div>
+      </div>
+    </div>
+  );
+}
