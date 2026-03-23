@@ -42,3 +42,31 @@ export function signOut() {
 export function getMe() {
   return request<UserInfo>("/api/auth/me");
 }
+
+// Chat types and API
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ChatResponse {
+  message: string;
+  extracted_fields: Record<string, string>;
+  is_complete: boolean;
+}
+
+export interface GreetingResponse {
+  message: string;
+}
+
+export function getChatGreeting() {
+  return request<GreetingResponse>("/api/chat/greeting");
+}
+
+export function sendChatMessage(history: ChatMessage[], message: string) {
+  return request<ChatResponse>("/api/chat/message", {
+    method: "POST",
+    body: JSON.stringify({ history, message }),
+  });
+}

@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import NdaForm from "./NdaForm";
+import ChatPanel from "./ChatPanel";
 import NdaPreview from "./NdaPreview";
 import { NdaFormData, defaultFormData, generateFullNda } from "@/lib/generateNda";
 
 export default function NdaCreator() {
   const [formData, setFormData] = useState<NdaFormData>(defaultFormData);
   const markdown = generateFullNda(formData);
+
+  function handleFieldsExtracted(fields: Partial<NdaFormData>) {
+    setFormData((prev) => ({ ...prev, ...fields }));
+  }
 
   function handleDownload() {
     const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
@@ -22,11 +26,12 @@ export default function NdaCreator() {
   return (
     <div className="flex flex-col lg:flex-row gap-8 flex-1">
       <div className="lg:w-1/2 shrink-0">
-        <div className="sticky top-8 space-y-4">
-          <NdaForm formData={formData} onChange={setFormData} />
+        <div className="space-y-4">
+          <ChatPanel onFieldsExtracted={handleFieldsExtracted} />
           <button
             onClick={handleDownload}
-            className="w-full rounded bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 transition-colors"
+            className="w-full rounded px-4 py-2.5 text-sm font-medium text-white transition-colors"
+            style={{ backgroundColor: "#753991" }}
           >
             Download Markdown
           </button>
