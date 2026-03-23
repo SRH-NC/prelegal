@@ -54,3 +54,49 @@ Backend available at http://localhost:8000
 - Dark Navy: `#032147` (headings)
 - Gray Text: `#888888`
 
+## Implementation Status
+
+### Completed
+
+#### PL-2: Legal Document Templates
+- 12 markdown templates from CommonPaper in `templates/`
+- `catalog.json` with name, description, and filename for each template
+- CC BY 4.0 license attribution
+
+#### PL-3: Mutual NDA Creator Prototype
+- Next.js 16 frontend with React 19 and Tailwind CSS 4
+- Manual form for NDA fields (purpose, dates, terms, parties)
+- Live markdown preview with react-markdown
+- Client-side markdown download
+
+#### PL-4: V1 Foundation
+- FastAPI backend (`backend/`) with uv project management
+- SQLite database, created fresh each container start
+- User auth (signup/signin/signout) with JWT in HttpOnly cookies and bcrypt
+- Auth API: POST /api/auth/signup, POST /api/auth/signin, POST /api/auth/signout, GET /api/auth/me
+- GET /api/health endpoint
+- Multi-stage Dockerfile (Node frontend build + Python runtime)
+- docker-compose.yml for orchestration
+- Start/stop scripts for Mac, Linux, Windows in `scripts/`
+- Static Next.js export served by FastAPI at localhost:8000
+- Sign in and sign up pages with project color scheme
+- Auth context provider and auth-aware header
+
+### Not Yet Implemented
+
+#### PL-5: AI Chat (Mutual NDA only)
+- Replace manual form with freeform AI chat
+- AI asks questions and populates NDA fields from responses
+- Uses LiteLLM via OpenRouter (openai/gpt-oss-120b model)
+- Structured outputs for field extraction
+
+#### PL-6: All Document Types
+- Expand AI chat to support all 12 document types
+- Document type detection from user requests
+- Graceful handling of unsupported document requests
+
+#### PL-7: Multi-User Support & Polish
+- User document persistence (save/load/delete)
+- My Documents view for previously created documents
+- Professional SaaS polish
+- Legal disclaimer on generated documents
