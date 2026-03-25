@@ -82,13 +82,16 @@ Backend available at http://localhost:8000
 - Sign in and sign up pages with project color scheme
 - Auth context provider and auth-aware header
 
-### Not Yet Implemented
-
 #### PL-5: AI Chat (Mutual NDA only)
-- Replace manual form with freeform AI chat
-- AI asks questions and populates NDA fields from responses
-- Uses LiteLLM via OpenRouter (openai/gpt-oss-120b model)
-- Structured outputs for field extraction
+- AI chat interface replaces manual NDA form (NdaForm.tsx kept as backup)
+- Backend POST /api/chat/message calls Nvidia Nemotron 120B (free) via LiteLLM/OpenRouter
+- GET /api/chat/greeting for initial AI message
+- Structured outputs using Pydantic model as response_format
+- Live NDA preview updates as AI extracts fields from conversation
+- ChatPanel component with chat bubbles, typing indicator, auto-scroll
+- Conversation history kept client-side, 50-message cap
+
+### Not Yet Implemented
 
 #### PL-6: All Document Types
 - Expand AI chat to support all 12 document types
