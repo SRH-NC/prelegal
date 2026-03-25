@@ -99,7 +99,7 @@ export default function ChatPanel({ onFieldsExtracted }: ChatPanelProps) {
               }`}
               style={
                 msg.role === "user"
-                  ? { backgroundColor: "#209dd7" }
+                  ? { backgroundColor: "#032147" }
                   : undefined
               }
             >

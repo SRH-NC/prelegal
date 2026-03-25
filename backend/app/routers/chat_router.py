@@ -1,4 +1,3 @@
-import json
 import os
 from typing import Literal, Optional
 from fastapi import APIRouter, HTTPException
@@ -7,7 +6,7 @@ import litellm
 
 router = APIRouter()
 
-MODEL = "openrouter/openai/gpt-oss-120b"
+MODEL = "openrouter/nvidia/nemotron-3-super-120b-a12b:free"
 
 
 def _get_api_key() -> str:
@@ -93,6 +92,13 @@ class ExtractedNdaFields(BaseModel):
     party2Address: Optional[str] = None
 
 
+class LlmResponse(BaseModel):
+    """Schema passed to LiteLLM as response_format for structured outputs."""
+    message: str
+    extracted_fields: ExtractedNdaFields
+    is_complete: bool
+
+
 class ChatResponse(BaseModel):
     message: str
     extracted_fields: dict
@@ -128,8 +134,8 @@ async def chat_message(body: ChatRequest):
             model=MODEL,
             messages=messages,
             api_key=api_key,
-            response_format={"type": "json_object"},
-            max_tokens=1000,
+            response_format=LlmResponse,
+            max_tokens=4000,
             temperature=0.7,
         )
 
@@ -137,27 +143,19 @@ async def chat_message(body: ChatRequest):
         if not content:
             raise ValueError("Empty response from LLM")
 
-        parsed = json.loads(content)
-
-        msg_text = parsed.get("message", "I'm sorry, I didn't understand that. Could you try again?")
-        raw_fields = parsed.get("extracted_fields", {})
-        is_complete = parsed.get("is_complete", False)
-
-        validated = ExtractedNdaFields(**raw_fields)
-        clean_fields = validated.model_dump(exclude_none=True)
+        parsed = LlmResponse.model_validate_json(content)
+        clean_fields = {
+            k: v
+            for k, v in parsed.extracted_fields.model_dump(exclude_none=True).items()
+            if v != ""
+        }
 
         return ChatResponse(
-            message=msg_text,
+            message=parsed.message,
             extracted_fields=clean_fields,
-            is_complete=is_complete,
+            is_complete=parsed.is_complete,
         )
 
-    except json.JSONDecodeError:
-        return ChatResponse(
-            message=content if content else "I had trouble processing that. Could you rephrase?",
-            extracted_fields={},
-            is_complete=False,
-        )
     except litellm.exceptions.APIError as e:
         raise HTTPException(status_code=502, detail=f"LLM service error: {str(e)}")
     except Exception as e:
