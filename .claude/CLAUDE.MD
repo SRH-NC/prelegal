@@ -20,7 +20,7 @@ When instructed to build a feature:
 
 ## AI design
 
-When writing code to make calls to LLMs, use LiteLLM via OpenRouter to the `openai/gpt-oss-120b` model. You should use Structured Outputs so that you can interpret the results and populate fields in the legal document.
+When writing code to make calls to LLMs, use LiteLLM via OpenRouter to the `nvidia/nemotron-3-super-120b-a12b:free` model. You should use Structured Outputs so that you can interpret the results and populate fields in the legal document.
 
 There is an OPENROUTER_API_KEY in the .env file in the project root.
 

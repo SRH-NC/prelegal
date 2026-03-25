@@ -1,9 +1,13 @@
 import os
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from app.database import init_db
 from app.routers.auth_router import router as auth_router
+from app.routers.chat_router import router as chat_router
+
+load_dotenv()
 
 STATIC_DIR = os.getenv("STATIC_DIR", "static")
 
@@ -17,6 +21,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Prelegal API", lifespan=lifespan)
 
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+app.include_router(chat_router, prefix="/api/chat", tags=["chat"])
 
 
 @app.get("/api/health")
