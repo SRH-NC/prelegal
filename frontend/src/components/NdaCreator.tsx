@@ -9,8 +9,8 @@ export default function NdaCreator() {
   const [formData, setFormData] = useState<NdaFormData>(defaultFormData);
   const markdown = generateFullNda(formData);
 
-  function handleFieldsExtracted(fields: Partial<NdaFormData>) {
-    setFormData((prev) => ({ ...prev, ...fields }));
+  function handleFieldsExtracted(_docType: string | null, fields: Record<string, string>) {
+    setFormData((prev) => ({ ...prev, ...fields } as NdaFormData));
   }
 
   function handleDownload() {

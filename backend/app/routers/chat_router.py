@@ -4,6 +4,8 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import litellm
 
+from app.document_types import DOCUMENT_TYPES, build_catalog_summary, build_field_descriptions
+
 router = APIRouter()
 
 MODEL = "openrouter/nvidia/nemotron-3-super-120b-a12b:free"
@@ -12,53 +14,55 @@ MODEL = "openrouter/nvidia/nemotron-3-super-120b-a12b:free"
 def _get_api_key() -> str:
     return os.getenv("OPENROUTER_API_KEY", "")
 
-SYSTEM_PROMPT = """You are a friendly legal assistant helping a user create a Mutual Non-Disclosure Agreement (NDA).
 
-Your job is to have a natural conversation to gather the information needed to fill in the NDA fields. Ask one or two questions at a time. Be conversational and helpful.
+def _build_system_prompt() -> str:
+    valid_types = ", ".join(DOCUMENT_TYPES.keys())
+    return f"""You are a friendly legal assistant helping users create legal documents. You can create any of the document types listed below.
 
-The NDA has these fields you need to gather:
-- purpose: How confidential information may be used (default: "Evaluating whether to enter into a business relationship with the other party.")
-- effectiveDate: When the NDA takes effect (YYYY-MM-DD format, default: today's date)
-- mndaTermType: Either "expires" or "until_terminated" (default: "expires")
-- mndaTermYears: Number of years if mndaTermType is "expires" (default: "1")
-- confidentialityTermType: Either "years" or "perpetual" (default: "years")
-- confidentialityTermYears: Number of years if confidentialityTermType is "years" (default: "1")
-- governingLaw: The US state whose laws govern the agreement
-- jurisdiction: Where legal disputes will be resolved (e.g., "courts located in New Castle, DE")
-- modifications: Any modifications to the standard NDA terms (default: none)
-- party1Name: Name of the person signing for Party 1
-- party1Title: Title of Party 1's signer
-- party1Company: Company name for Party 1
-- party1Address: Notice address (email or postal) for Party 1
-- party2Name: Name of the person signing for Party 2
-- party2Title: Title of Party 2's signer
-- party2Company: Company name for Party 2
-- party2Address: Notice address (email or postal) for Party 2
+Your job is to:
+1. Identify what type of document the user needs from the conversation.
+2. Have a natural conversation to gather the fields for that document type.
+3. Ask one or two questions at a time. Be conversational and helpful.
+4. When you have the required fields, confirm with the user and set is_complete to true.
 
-Guidelines:
-- Start by asking about the purpose and the two companies involved.
-- Ask about governing law and jurisdiction together.
-- Ask about party details (names, titles, addresses) after the main terms.
-- For term types and years, explain the options briefly.
-- When you have enough information, confirm with the user and set is_complete to true.
-- The minimum required fields to be complete are: purpose, governingLaw, jurisdiction, party1Company, party2Company.
-- Only include fields in extracted_fields that you have gathered from the conversation. Do not include fields you haven't discussed yet.
+{build_catalog_summary()}
+
+{build_field_descriptions()}
+
+IMPORTANT RULES:
+- Set `document_type` to exactly one of: {valid_types}
+- Do NOT invent new document type values.
+- If the user asks for a document type not in the list above, politely refuse and list the available document types. Do NOT set document_type for unsupported requests.
+- "Mutual NDA" and "Mutual NDA Cover Page" are the same document type: use `mutual_nda`.
+- Only include fields in `fields` that have been explicitly provided or confirmed by the user. Do not include empty or unconfirmed fields.
+- Set `is_complete` to true only when you have gathered at least all the required fields for the identified document type AND confirmed with the user.
+- Dates should be in YYYY-MM-DD format.
 
 You MUST respond with valid JSON matching this exact format:
-{
+{{
   "message": "Your conversational response to the user",
-  "extracted_fields": {
+  "document_type": "the_doc_type_slug_or_null",
+  "fields": {{
     "fieldName": "value"
-  },
+  }},
   "is_complete": false
-}
+}}"""
 
-Only include fields in extracted_fields that have been explicitly provided or confirmed by the user. The is_complete field should be true only when you have gathered at least the minimum required fields and confirmed with the user."""
 
 GREETING = (
-    "Hi! I'm here to help you create a Mutual Non-Disclosure Agreement. "
-    "Let's start with the basics — what's the purpose of this NDA, "
-    "and which two companies will be entering into this agreement?"
+    "Hi! I'm here to help you create a legal document. I can help with:\n\n"
+    "- Mutual NDA\n"
+    "- Cloud Service Agreement\n"
+    "- Pilot Agreement\n"
+    "- Design Partner Agreement\n"
+    "- Service Level Agreement\n"
+    "- Professional Services Agreement\n"
+    "- Data Processing Agreement\n"
+    "- Partnership Agreement\n"
+    "- Software License Agreement\n"
+    "- Business Associate Agreement (HIPAA)\n"
+    "- AI Addendum\n\n"
+    "What type of document do you need?"
 )
 
 
@@ -72,36 +76,22 @@ class ChatRequest(BaseModel):
     message: str
 
 
-class ExtractedNdaFields(BaseModel):
-    purpose: Optional[str] = None
-    effectiveDate: Optional[str] = None
-    mndaTermType: Optional[Literal["expires", "until_terminated"]] = None
-    mndaTermYears: Optional[str] = None
-    confidentialityTermType: Optional[Literal["years", "perpetual"]] = None
-    confidentialityTermYears: Optional[str] = None
-    governingLaw: Optional[str] = None
-    jurisdiction: Optional[str] = None
-    modifications: Optional[str] = None
-    party1Name: Optional[str] = None
-    party1Title: Optional[str] = None
-    party1Company: Optional[str] = None
-    party1Address: Optional[str] = None
-    party2Name: Optional[str] = None
-    party2Title: Optional[str] = None
-    party2Company: Optional[str] = None
-    party2Address: Optional[str] = None
+class ExtractedFields(BaseModel):
+    document_type: Optional[str] = None
+    fields: dict[str, str] = {}
 
 
 class LlmResponse(BaseModel):
-    """Schema passed to LiteLLM as response_format for structured outputs."""
     message: str
-    extracted_fields: ExtractedNdaFields
-    is_complete: bool
+    document_type: Optional[str] = None
+    fields: dict[str, str] = {}
+    is_complete: bool = False
 
 
 class ChatResponse(BaseModel):
     message: str
-    extracted_fields: dict
+    document_type: Optional[str] = None
+    extracted_fields: dict[str, str]
     is_complete: bool
 
 
@@ -122,7 +112,7 @@ async def chat_message(body: ChatRequest):
 
     history = body.history[-50:] if len(body.history) > 50 else body.history
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    messages = [{"role": "system", "content": _build_system_prompt()}]
 
     for msg in history:
         messages.append({"role": msg.role, "content": msg.content})
@@ -144,14 +134,17 @@ async def chat_message(body: ChatRequest):
             raise ValueError("Empty response from LLM")
 
         parsed = LlmResponse.model_validate_json(content)
-        clean_fields = {
-            k: v
-            for k, v in parsed.extracted_fields.model_dump(exclude_none=True).items()
-            if v != ""
-        }
+
+        # Validate document_type if provided
+        doc_type = parsed.document_type
+        if doc_type and doc_type not in DOCUMENT_TYPES:
+            doc_type = None
+
+        clean_fields = {k: v for k, v in parsed.fields.items() if v and v.strip()}
 
         return ChatResponse(
             message=parsed.message,
+            document_type=doc_type,
             extracted_fields=clean_fields,
             is_complete=parsed.is_complete,
         )
