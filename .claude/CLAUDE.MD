@@ -91,12 +91,16 @@ Backend available at http://localhost:8000
 - ChatPanel component with chat bubbles, typing indicator, auto-scroll
 - Conversation history kept client-side, 50-message cap
 
-### Not Yet Implemented
-
 #### PL-6: All Document Types
-- Expand AI chat to support all 12 document types
-- Document type detection from user requests
-- Graceful handling of unsupported document requests
+- AI detects document type from conversation (no dropdown)
+- All 11 document types supported via document_types.py config
+- Unsupported document requests refused with list of available types
+- Generic cover page / key terms preview for non-NDA documents
+- NDA retains pixel-identical preview via existing generateNda.ts
+- DocumentCreator and DocumentPreview replace NdaCreator
+- System prompt built dynamically from document type config
+
+### Not Yet Implemented
 
 #### PL-7: Multi-User Support & Polish
 - User document persistence (save/load/delete)
