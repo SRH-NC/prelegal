@@ -100,10 +100,12 @@ Backend available at http://localhost:8000
 - DocumentCreator and DocumentPreview replace NdaCreator
 - System prompt built dynamically from document type config
 
-### Not Yet Implemented
-
 #### PL-7: Multi-User Support & Polish
-- User document persistence (save/load/delete)
-- My Documents view for previously created documents
-- Professional SaaS polish
-- Legal disclaimer on generated documents
+- Document persistence: Save button (auth required), stored as doc_type + fields JSON
+- Document CRUD API: GET/POST /api/documents, DELETE /api/documents/{id}
+- My Documents modal to view, load, and delete saved documents
+- New Document button in header to reset chat and start fresh
+- Legal disclaimer in document preview and downloaded markdown
+- Save button only visible when signed in; chat open to all
+
+### All Planned Features Complete
