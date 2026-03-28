@@ -6,10 +6,9 @@ import {
   sendChatMessage,
   type ChatMessage,
 } from "@/lib/api";
-import { type NdaFormData } from "@/lib/generateNda";
 
 interface ChatPanelProps {
-  onFieldsExtracted: (fields: Partial<NdaFormData>) => void;
+  onFieldsExtracted: (docType: string | null, fields: Record<string, string>) => void;
 }
 
 export default function ChatPanel({ onFieldsExtracted }: ChatPanelProps) {
@@ -30,7 +29,7 @@ export default function ChatPanel({ onFieldsExtracted }: ChatPanelProps) {
           {
             role: "assistant",
             content:
-              "Hi! I'm here to help you create a Mutual NDA. What's the purpose of this agreement, and which companies are involved?",
+              "Hi! I'm here to help you create a legal document. What type of document do you need?",
           },
         ]);
       });
@@ -65,9 +64,10 @@ export default function ChatPanel({ onFieldsExtracted }: ChatPanelProps) {
         ...updatedMessages,
         { role: "assistant", content: response.message },
       ]);
-      if (Object.keys(response.extracted_fields).length > 0) {
-        onFieldsExtracted(response.extracted_fields as Partial<NdaFormData>);
-      }
+      onFieldsExtracted(
+        response.document_type ?? null,
+        response.extracted_fields
+      );
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to get AI response"

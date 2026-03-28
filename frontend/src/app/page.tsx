@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import NdaCreator from "@/components/NdaCreator";
+import DocumentCreator from "@/components/DocumentCreator";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Home() {
@@ -16,7 +16,7 @@ export default function Home() {
               Prelegal
             </h1>
             <p className="text-sm" style={{ color: "#888888" }}>
-              Mutual NDA Creator
+              Legal Document Creator
             </p>
           </div>
           {!loading && (
@@ -56,7 +56,7 @@ export default function Home() {
       </header>
       <main className="flex-1 px-6 py-8">
         <div className="mx-auto max-w-7xl">
-          <NdaCreator />
+          <DocumentCreator />
         </div>
       </main>
       <footer className="border-t border-zinc-200 bg-white px-6 py-3">

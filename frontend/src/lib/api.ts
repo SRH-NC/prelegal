@@ -52,6 +52,7 @@ export interface ChatMessage {
 
 export interface ChatResponse {
   message: string;
+  document_type: string | null;
   extracted_fields: Record<string, string>;
   is_complete: boolean;
 }
