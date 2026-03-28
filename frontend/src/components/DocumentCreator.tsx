@@ -5,7 +5,7 @@ import ChatPanel from "./ChatPanel";
 import DocumentPreview from "./DocumentPreview";
 import { generateFullDocumentMarkdown } from "@/lib/generateDocument";
 import { getDownloadFilename, getDocumentTitle } from "@/lib/documentTypes";
-import { saveDocument } from "@/lib/api";
+import { saveDocument, getTemplate } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
 interface DocumentCreatorProps {
@@ -46,9 +46,27 @@ export default function DocumentCreator({
     []
   );
 
-  function handleDownload() {
+  async function handleDownload() {
     if (!docType) return;
-    const markdown = generateFullDocumentMarkdown(docType, fields);
+    let markdown = generateFullDocumentMarkdown(docType, fields);
+    try {
+      const template = await getTemplate(docType);
+      if (template) {
+        // Insert standard terms before the disclaimer
+        const disclaimerIdx = markdown.lastIndexOf("\n\n---\n\n*DISCLAIMER:");
+        if (disclaimerIdx > 0) {
+          markdown =
+            markdown.slice(0, disclaimerIdx) +
+            "\n\n---\n\n## Standard Terms\n\n" +
+            template +
+            markdown.slice(disclaimerIdx);
+        } else {
+          markdown += "\n\n---\n\n## Standard Terms\n\n" + template;
+        }
+      }
+    } catch {
+      // Download without template if fetch fails
+    }
     const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");

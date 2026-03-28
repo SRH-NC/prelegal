@@ -23,5 +23,8 @@ COPY backend/app ./app
 # Copy built frontend
 COPY --from=node-builder /build/out ./static
 
+# Copy document templates
+COPY templates ./templates
+
 EXPOSE 8000
 CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

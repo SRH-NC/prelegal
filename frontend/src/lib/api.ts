@@ -99,3 +99,13 @@ export function deleteDocument(id: string) {
     credentials: "include",
   });
 }
+
+// Template API
+
+export async function getTemplate(docType: string): Promise<string> {
+  const res = await fetch(`/api/templates/${docType}`);
+  if (!res.ok) {
+    throw new Error(`Failed to load template for ${docType}`);
+  }
+  return res.text();
+}

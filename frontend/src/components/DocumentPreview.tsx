@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { generateCoverPageMarkdown } from "@/lib/generateDocument";
 import { getDocumentTitle } from "@/lib/documentTypes";
+import { getTemplate } from "@/lib/api";
 
 interface DocumentPreviewProps {
   docType: string | null;
@@ -11,6 +13,21 @@ interface DocumentPreviewProps {
 }
 
 export default function DocumentPreview({ docType, fields }: DocumentPreviewProps) {
+  const [templateContent, setTemplateContent] = useState<string>("");
+  const [loadingTemplate, setLoadingTemplate] = useState(false);
+
+  useEffect(() => {
+    if (!docType) {
+      setTemplateContent("");
+      return;
+    }
+    setLoadingTemplate(true);
+    getTemplate(docType)
+      .then(setTemplateContent)
+      .catch(() => setTemplateContent(""))
+      .finally(() => setLoadingTemplate(false));
+  }, [docType]);
+
   if (!docType) {
     return (
       <div className="flex items-center justify-center h-full min-h-[300px] text-sm" style={{ color: "#888888" }}>
@@ -26,7 +43,10 @@ export default function DocumentPreview({ docType, fields }: DocumentPreviewProp
     );
   }
 
-  const markdown = generateCoverPageMarkdown(docType, fields);
+  const coverPage = generateCoverPageMarkdown(docType, fields);
+  const fullDocument = templateContent
+    ? coverPage + "\n\n---\n\n## Standard Terms\n\n" + templateContent
+    : coverPage;
 
   return (
     <div>
@@ -36,7 +56,11 @@ export default function DocumentPreview({ docType, fields }: DocumentPreviewProp
         </p>
       </div>
       <div className="prose prose-sm prose-zinc max-w-none">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
+        {loadingTemplate ? (
+          <p className="text-zinc-400">Loading document template...</p>
+        ) : (
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{fullDocument}</ReactMarkdown>
+        )}
       </div>
       <div
         className="mt-6 pt-4 border-t border-zinc-200 text-xs"
