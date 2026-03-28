@@ -8,7 +8,7 @@ The available documents are covered in the catalog.json file in the project root
 
 @catalog.json
 
-The product is under active development.
+All planned features (PL-2 through PL-7) are complete.
 
 ## Development process
 
@@ -95,8 +95,8 @@ Backend available at http://localhost:8000
 - AI detects document type from conversation (no dropdown)
 - All 11 document types supported via document_types.py config
 - Unsupported document requests refused with list of available types
-- Generic cover page / key terms preview for non-NDA documents
-- NDA retains pixel-identical preview via existing generateNda.ts
+- Full legal text from CommonPaper templates served via GET /api/templates/{doc_type}
+- Cover page + standard terms rendered in preview and included in download
 - DocumentCreator and DocumentPreview replace NdaCreator
 - System prompt built dynamically from document type config
 
@@ -107,5 +107,18 @@ Backend available at http://localhost:8000
 - New Document button in header to reset chat and start fresh
 - Legal disclaimer in document preview and downloaded markdown
 - Save button only visible when signed in; chat open to all
+
+### Current API Endpoints
+- `POST /api/auth/signup` - Create new user account
+- `POST /api/auth/signin` - Sign in and receive JWT cookie
+- `POST /api/auth/signout` - Clear auth cookie
+- `GET /api/auth/me` - Get current user info
+- `GET /api/chat/greeting` - Get AI greeting with available document types
+- `POST /api/chat/message` - Send chat message, receive AI response with extracted fields
+- `GET /api/documents` - List user's saved documents (auth required)
+- `POST /api/documents` - Save new document (auth required)
+- `DELETE /api/documents/{id}` - Delete document (auth required)
+- `GET /api/templates/{doc_type}` - Get CommonPaper template markdown
+- `GET /api/health` - Health check
 
 ### All Planned Features Complete
