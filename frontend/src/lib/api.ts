@@ -71,3 +71,31 @@ export function sendChatMessage(history: ChatMessage[], message: string) {
     body: JSON.stringify({ history, message }),
   });
 }
+
+// Document types and API
+
+export interface SavedDocument {
+  id: string;
+  title: string;
+  doc_type: string;
+  fields: Record<string, string>;
+  created_at: string;
+}
+
+export function listDocuments() {
+  return request<SavedDocument[]>("/api/documents");
+}
+
+export function saveDocument(title: string, doc_type: string, fields: Record<string, string>) {
+  return request<SavedDocument>("/api/documents", {
+    method: "POST",
+    body: JSON.stringify({ title, doc_type, fields }),
+  });
+}
+
+export function deleteDocument(id: string) {
+  return fetch(`/api/documents/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+}
